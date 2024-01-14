@@ -1,0 +1,234 @@
+{% extends "base.html" %} {% load static %}
+<!-- -->
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/spinner.css' %}" />
+{% endblock css %}
+<!-- -->
+{% block title %}StonkAdvisor{% endblock title %}
+<!-- -->
+{% block scripts %}
+<script type="text/javascript" src="{% static 'js/cache.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
+{% endblock scripts %}
+<!-- -->
+{% block content %}
+
+<div class="container col-xl-10 col-xxl-8 px-4 py-5">
+  <div class="spinnerDisplay d-none d-flex align-items-center">
+    <strong>Loading...</strong>
+    <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+  </div>
+  <div class="row align-items-center g-lg-5 py-5">
+    <div class="col-lg-7 text-center text-lg-start">
+      <h1 class="display-4 fw-bold lh-1 mb-3">Welcome to Stonk Advisor</h1>
+      <span>A Stonkmarket.de product and not actual financial advice.</span>
+      <p class="col-lg-10 fs-4 mt-2">
+        Enter some financial news below in order to generate financial advice
+        for humans.
+      </p>
+    </div>
+    <div class="col-md-10 mx-auto col-lg-5">
+      <form
+        id="questionForm"
+        action="/advice"
+        method="post"
+        class="p-2 p-md-4 border rounded-3 bg-light"
+      >
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="questionfield" class="form-label"
+            >Paste article here (max. {{max_question_length}} characters or
+            {{max_token_length }} tokens):</label
+          >
+          <textarea
+            maxlength="{{max_question_length}}"
+            class="form-control"
+            id="questionfield"
+            rows="5"
+            name="question_text"
+          ></textarea>
+          <p id="charcounter" class="fw-lighter fs-6">Count: 0 Token: 0</p>
+        </div>
+        <select
+          id="answerStyleSelector"
+          class="form-select"
+          aria-label="Default select example"
+          name="answer-style-select"
+        >
+          <option selected>Choose an answer style.</option>
+          <option value="dumb">Simple</option>
+          <option value="pro">Professional</option>
+          <option value="wsb">WallStreetBets</option>
+        </select>
+
+        <div class="my-3 form-check">
+          <input
+            name="not-fin-advice-checkbox"
+            required
+            type="checkbox"
+            class="form-check-input"
+            id="notFinAdviceCheckbox"
+          />
+          <label class="form-check-label" for="notFinAdviceCheckbox"
+            >i understand that this is <strong>NOT</strong> financial advice.
+            (<a href="{% url 'not-advice' %}">Disclaimer</a>)</label
+          >
+        </div>
+        <button type="submit" class="spinnerDisplay btn btn-primary">
+          Submit
+        </button>
+        <button
+          class="spinnerDisplay d-none btn btn-primary"
+          type="button"
+          disabled
+        >
+          <span
+            class="spinner-border spinner-border-sm"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          Loading...
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="container px-4">
+  <h2>Latest Answer</h2>
+  <div class="row">
+    <div class="col-md-6 mb-2 border p-2">
+      <h3>Question</h3>
+      <p>{{page_obj.0.text}}</p>
+    </div>
+    <div class="col-md-6 mb-2 border p-2 ml-4">
+      <h3>Answer</h3>
+      <p>{{page_obj.0.raw_finadvice.raw_text }}</p>
+    </div>
+  </div>
+
+  <h2 class="my-4">More Questions</h2>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Style</th>
+        <th scope="col">Question</th>
+        <th scope="col">Advice</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in page_obj %}
+      <tr>
+        <!-- -->
+        <td>
+          <div>
+            {% if req.mode == "wsb" %}
+            <p>WallStreetBets</p>
+            {% elif req.mode == "dumb" %}
+            <p>Simple</p>
+            {% elif req.mode == "pro" %}
+            <p>Professional</p>
+            {% else %}
+            <p>None</p>
+            {% endif %}
+            <button type="button" class="btn btn-outline-success btn-sm">
+              Like
+            </button>
+          </div>
+        </td>
+        <!-- -->
+        <td>{{ req.text|slice:":100" }} <br /><a href="#">Read more</a></td>
+        <!-- -->
+        <td>
+          {{ req.raw_finadvice.raw_text |slice:":100"}}
+          <br /><a href="#">Read more</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pagination justify-content-center">
+    <span class="step-links">
+      {% if page_obj.has_previous %}
+      <a href="?page=1">&laquo; first</a>
+      <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
+
+      <span class="current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+      {% endif %}
+    </span>
+  </div>
+</div>
+
+<div class="container px-4" id="featured-3">
+  <h2 class="pb-2 border-bottom">Columns with icons</h2>
+  <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="feature col">
+      <div class="feature-icon bg-primary bg-gradient">
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#collection"></use>
+        </svg>
+      </div>
+      <h2>Featured title</h2>
+      <p>
+        Paragraph of text beneath the heading to explain the heading. We'll add
+        onto it with another sentence and probably just keep going until we run
+        out of words.
+      </p>
+      <a href="#" class="icon-link">
+        Call to action
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#chevron-right"></use>
+        </svg>
+      </a>
+    </div>
+    <div class="feature col">
+      <div class="feature-icon bg-primary bg-gradient">
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#people-circle"></use>
+        </svg>
+      </div>
+      <h2>Featured title</h2>
+      <p>
+        Paragraph of text beneath the heading to explain the heading. We'll add
+        onto it with another sentence and probably just keep going until we run
+        out of words.
+      </p>
+      <a href="#" class="icon-link">
+        Call to action
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#chevron-right"></use>
+        </svg>
+      </a>
+    </div>
+    <div class="feature col">
+      <div class="feature-icon bg-primary bg-gradient">
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#toggles2"></use>
+        </svg>
+      </div>
+      <h2>Featured title</h2>
+      <p>
+        Paragraph of text beneath the heading to explain the heading. We'll add
+        onto it with another sentence and probably just keep going until we run
+        out of words.
+      </p>
+      <a href="#" class="icon-link">
+        Call to action
+        <svg class="bi" width="1em" height="1em">
+          <use xlink:href="#chevron-right"></use>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
